@@ -109,13 +109,18 @@ struct LintOrAnalyzeCommand {
     }
 
     private static func applyLeniency(options: LintOrAnalyzeOptions, violations: [StyleViolation]) -> [StyleViolation] {
-        if !options.lenient {
+        guard options.lenient || options.strict else {
             return violations
         }
         return violations.map {
-            if $0.severity == .error {
+            if $0.severity == .error && options.lenient {
                 return StyleViolation(ruleDescription: $0.ruleDescription,
                                       severity: .warning,
+                                      location: $0.location,
+                                      reason: $0.reason)
+            } else if $0.severity == .warning && options.strict {
+                return StyleViolation(ruleDescription: $0.ruleDescription,
+                                      severity: .error,
                                       location: $0.location,
                                       reason: $0.reason)
             } else {
